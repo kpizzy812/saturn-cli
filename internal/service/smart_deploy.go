@@ -133,7 +133,7 @@ func sanitizeKey(name string) string {
 // GetChangedFiles returns files changed between base branch and HEAD.
 func GetChangedFiles(base string) ([]string, error) {
 	// #nosec G204 - base is from config, not user input
-	cmd := exec.Command("git", "diff", "--name-only", base+"..HEAD")
+	cmd := exec.CommandContext(context.Background(), "git", "diff", "--name-only", base+"..HEAD")
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("git diff failed: %w", err)
@@ -151,7 +151,7 @@ func GetChangedFiles(base string) ([]string, error) {
 
 // GetGitRemoteURL returns the origin remote URL for the current repo.
 func GetGitRemoteURL() (string, error) {
-	cmd := exec.Command("git", "remote", "get-url", "origin")
+	cmd := exec.CommandContext(context.Background(), "git", "remote", "get-url", "origin")
 	out, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to get git remote URL: %w", err)
