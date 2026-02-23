@@ -796,7 +796,7 @@ func TestDeploymentService_WaitForCompletion_Failed(t *testing.T) {
 }
 
 func TestDeploymentService_WaitForCompletion_ContextCancelled(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(models.Deployment{
 			UUID:   "dep-hang",
