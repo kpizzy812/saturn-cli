@@ -14,11 +14,11 @@ import (
 
 // Version variables injected by GoReleaser at build time via ldflags
 var (
-	version = "v1.4.0"
+	version = "v1.6.0"
 )
 
 // GitHubAPIURL is the URL for fetching CLI version tags (exported for testing)
-var GitHubAPIURL = "https://api.github.com/repos/saturn-platform/saturn-cli/git/refs/tags"
+var GitHubAPIURL = "https://api.github.com/repos/kpizzy812/saturn-cli/git/refs/tags"
 
 func GetVersion() string {
 	return version

@@ -18,7 +18,7 @@ func NewUpdateCommand() *cobra.Command {
 		Use:   "update",
 		Short: "Update Saturn CLI",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			latest, found, err := selfupdate.DetectLatest(cmd.Context(), selfupdate.ParseSlug("saturn-platform/saturn-cli"))
+			latest, found, err := selfupdate.DetectLatest(cmd.Context(), selfupdate.ParseSlug("kpizzy812/saturn-cli"))
 			if err != nil {
 				return fmt.Errorf("failed to detect latest version: %w", err)
 			}
