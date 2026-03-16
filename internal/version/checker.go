@@ -6,22 +6,29 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"runtime/debug"
 	"sort"
 	"time"
 
 	compareVersion "github.com/hashicorp/go-version"
 )
 
-// Version variables injected by GoReleaser at build time via ldflags
-var (
-	version = "v1.6.0"
-)
+// version is injected by GoReleaser at build time via ldflags.
+// If not set (local build), falls back to Go module version or "dev".
+var version string
 
 // GitHubAPIURL is the URL for fetching CLI version tags (exported for testing)
 var GitHubAPIURL = "https://api.github.com/repos/kpizzy812/saturn-cli/git/refs/tags"
 
 func GetVersion() string {
-	return version
+	if version != "" {
+		return version
+	}
+	// Fallback: go install sets module version in build info
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+		return info.Main.Version
+	}
+	return "dev"
 }
 
 // Tag represents a git tag for version checking

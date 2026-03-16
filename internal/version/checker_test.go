@@ -14,9 +14,9 @@ func TestGetVersion(t *testing.T) {
 	if v == "" {
 		t.Error("GetVersion() returned empty string")
 	}
-	// Version should start with 'v'
-	if v[0] != 'v' {
-		t.Errorf("GetVersion() = %q, expected to start with 'v'", v)
+	// In local builds (no ldflags), version is "dev"; in CI/release it starts with 'v'
+	if v != "dev" && v[0] != 'v' {
+		t.Errorf("GetVersion() = %q, expected 'dev' or to start with 'v'", v)
 	}
 }
 
