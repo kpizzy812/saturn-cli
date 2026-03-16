@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/saturn-platform/saturn-cli/internal/api"
 	"github.com/saturn-platform/saturn-cli/internal/models"
@@ -64,21 +65,19 @@ func (s *ApplicationService) Start(ctx context.Context, uuid string, force bool,
 	var resp models.ApplicationLifecycleResponse
 
 	// Build URL with query parameters
-	url := fmt.Sprintf("applications/%s/start", uuid)
+	endpoint := fmt.Sprintf("applications/%s/start", uuid)
 	if force || instantDeploy {
-		url += "?"
+		params := url.Values{}
 		if force {
-			url += "force=true"
+			params.Set("force", "true")
 		}
 		if instantDeploy {
-			if force {
-				url += "&"
-			}
-			url += "instant_deploy=true"
+			params.Set("instant_deploy", "true")
 		}
+		endpoint += "?" + params.Encode()
 	}
 
-	err := s.client.Get(ctx, url, &resp)
+	err := s.client.Get(ctx, endpoint, &resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start application %s: %w", uuid, err)
 	}

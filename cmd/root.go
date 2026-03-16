@@ -28,20 +28,13 @@ import (
 	"github.com/saturn-platform/saturn-cli/internal/version"
 )
 
-// Legacy global variables - kept for backward compatibility during migration
-// TODO: Remove these once all commands are refactored
+// Global flag variables bound to persistent flags
 var (
-	Version            string
-	Name               string
-	Fqdn               string
-	Token              string
-	ContextName        string
-	Debug              bool
-	ShowSensitive      bool
-	Format             string
-	JSONMode           bool
-	PrettyMode         bool
-	SetDefaultInstance bool
+	Token         string
+	ContextName   string
+	Debug         bool
+	ShowSensitive bool
+	Format        string
 )
 
 var rootCmd = &cobra.Command{
@@ -101,6 +94,7 @@ func init() {
 	rootCmd.AddCommand(update.NewUpdateCommand())
 	rootCmd.AddCommand(cliversion.NewVersionCommand())
 	rootCmd.AddCommand(NewDocsCommand())
+	rootCmd.AddCommand(NewInitCommand())
 	rootCmd.AddCommand(NewLoginCommand())
 }
 

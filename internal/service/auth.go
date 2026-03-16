@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/saturn-platform/saturn-cli/internal/models"
@@ -28,9 +29,9 @@ func NewAuthService(baseURL string) *AuthService {
 
 // InitDeviceAuth initiates a device authorization session
 func (a *AuthService) InitDeviceAuth(ctx context.Context) (*models.DeviceAuthResponse, error) {
-	url := a.baseURL + "/api/v1/cli/auth/init"
+	endpoint := a.baseURL + "/api/v1/cli/auth/init"
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader([]byte("{}")))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader([]byte("{}")))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -62,9 +63,9 @@ func (a *AuthService) InitDeviceAuth(ctx context.Context) (*models.DeviceAuthRes
 
 // CheckAuthStatus checks the current status of the device auth session
 func (a *AuthService) CheckAuthStatus(ctx context.Context, secret string) (*models.DeviceAuthStatus, error) {
-	url := fmt.Sprintf("%s/api/v1/cli/auth/check?secret=%s", a.baseURL, secret)
+	endpoint := fmt.Sprintf("%s/api/v1/cli/auth/check?secret=%s", a.baseURL, url.QueryEscape(secret))
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}

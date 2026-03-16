@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"sort"
 	"time"
 
@@ -60,10 +61,11 @@ type DeployResponse struct {
 
 // Deploy triggers a deployment for a resource
 func (s *DeploymentService) Deploy(ctx context.Context, uuid string, force bool) (*DeployResponse, error) {
-	endpoint := fmt.Sprintf("deploy?uuid=%s", uuid)
+	params := url.Values{"uuid": {uuid}}
 	if force {
-		endpoint += "&force=true"
+		params.Set("force", "true")
 	}
+	endpoint := "deploy?" + params.Encode()
 
 	var response DeployResponse
 	err := s.client.Get(ctx, endpoint, &response)
@@ -128,16 +130,14 @@ func (s *DeploymentService) ListByApplicationWithPagination(ctx context.Context,
 
 	// Add pagination parameters if specified
 	if skip > 0 || take > 0 {
-		endpoint += "?"
+		params := url.Values{}
 		if skip > 0 {
-			endpoint += fmt.Sprintf("skip=%d", skip)
+			params.Set("skip", fmt.Sprintf("%d", skip))
 		}
 		if take > 0 {
-			if skip > 0 {
-				endpoint += "&"
-			}
-			endpoint += fmt.Sprintf("take=%d", take)
+			params.Set("take", fmt.Sprintf("%d", take))
 		}
+		endpoint += "?" + params.Encode()
 	}
 
 	var response DeploymentsListResponse
@@ -228,10 +228,11 @@ func (s *DeploymentService) ExecuteRollback(ctx context.Context, appUUID, deploy
 
 // DeployByTag triggers a deployment by tag name
 func (s *DeploymentService) DeployByTag(ctx context.Context, tag string, force bool) (*DeployResponse, error) {
-	endpoint := fmt.Sprintf("deploy?tag=%s", tag)
+	params := url.Values{"tag": {tag}}
 	if force {
-		endpoint += "&force=true"
+		params.Set("force", "true")
 	}
+	endpoint := "deploy?" + params.Encode()
 
 	var response DeployResponse
 	err := s.client.Get(ctx, endpoint, &response)
@@ -243,10 +244,14 @@ func (s *DeploymentService) DeployByTag(ctx context.Context, tag string, force b
 
 // DeployByPR triggers a PR preview deployment
 func (s *DeploymentService) DeployByPR(ctx context.Context, uuid string, prID int, force bool) (*DeployResponse, error) {
-	endpoint := fmt.Sprintf("deploy?uuid=%s&pr=%d", uuid, prID)
-	if force {
-		endpoint += "&force=true"
+	params := url.Values{
+		"uuid": {uuid},
+		"pr":   {fmt.Sprintf("%d", prID)},
 	}
+	if force {
+		params.Set("force", "true")
+	}
+	endpoint := "deploy?" + params.Encode()
 
 	var response DeployResponse
 	err := s.client.Get(ctx, endpoint, &response)
@@ -403,7 +408,10 @@ func (s *DeploymentService) GetLogsByDeploymentWithFormat(ctx context.Context, d
 	}
 
 	// For table/text format, parse and format the logs
-	// ParseAndFormatLogs will return original if parsing fails
-	formattedLogs, _ := models.ParseAndFormatLogs(*deployment.Logs, showHidden)
+	formattedLogs, err := models.ParseAndFormatLogs(*deployment.Logs, showHidden)
+	if err != nil {
+		// Fallback to raw logs if parsing fails
+		return *deployment.Logs, nil
+	}
 	return formattedLogs, nil
 }

@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/saturn-platform/saturn-cli/internal/cli"
+	"github.com/saturn-platform/saturn-cli/internal/config"
 )
 
 // NewUpdateCommand creates the update command
@@ -18,62 +18,45 @@ func NewUpdateCommand() *cobra.Command {
 		Short:   "Update a context's properties (name, URL, token)",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			oldName := args[0]
-			instances := viper.Get("instances").([]interface{})
 
-			// Get flags
 			newName, _ := cmd.Flags().GetString("name")
 			newURL, _ := cmd.Flags().GetString("url")
 			newToken, _ := cmd.Flags().GetString("token")
 
-			// Check if at least one flag is provided
 			if newName == "" && newURL == "" && newToken == "" {
 				return fmt.Errorf("at least one of --name, --url, or --token must be provided")
 			}
 
-			// Find the context
-			var found bool
-			var contextToUpdate map[string]interface{}
-			for _, instance := range instances {
-				instanceMap := instance.(map[string]interface{})
-				if instanceMap["name"] == oldName {
-					found = true
-					contextToUpdate = instanceMap
-					break
-				}
+			cfg, err := config.Load()
+			if err != nil {
+				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			if !found {
+			instance, err := cfg.GetInstance(oldName)
+			if err != nil {
 				return fmt.Errorf("context '%s' not found", oldName)
 			}
 
 			// If renaming, check if new name already exists
 			if newName != "" && newName != oldName {
-				for _, instance := range instances {
-					instanceMap := instance.(map[string]interface{})
-					if instanceMap["name"] == newName {
-						return fmt.Errorf("context with name '%s' already exists", newName)
-					}
+				if _, dupErr := cfg.GetInstance(newName); dupErr == nil {
+					return fmt.Errorf("context with name '%s' already exists", newName)
 				}
-				contextToUpdate["name"] = newName
+				instance.Name = newName
 			}
 
-			// Update URL if provided
 			if newURL != "" {
-				contextToUpdate["fqdn"] = newURL
+				instance.FQDN = newURL
 			}
 
-			// Update token if provided
 			if newToken != "" {
-				contextToUpdate["token"] = newToken
+				instance.Token = newToken
 			}
 
-			// Save changes
-			viper.Set("instances", instances)
-			if err := viper.WriteConfig(); err != nil {
+			if err := cfg.Save(); err != nil {
 				return fmt.Errorf("failed to save config: %w", err)
 			}
 
-			// Use the new name if renamed, otherwise use old name
 			finalName := oldName
 			if newName != "" {
 				finalName = newName

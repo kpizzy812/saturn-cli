@@ -2,7 +2,6 @@ package context
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/saturn-platform/saturn-cli/internal/config"
 	"github.com/saturn-platform/saturn-cli/internal/output"
@@ -14,57 +13,22 @@ func NewListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List all configured contexts",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			// Get instances from viper (returns []interface{})
-			instancesRaw := viper.Get("instances")
-			if instancesRaw == nil {
-				instancesRaw = []interface{}{}
+			cfg, err := config.Load()
+			if err != nil {
+				cfg = config.New()
 			}
-			instancesInterface := instancesRaw.([]interface{})
 
 			format, _ := cmd.Flags().GetString("format")
 			showSensitive, _ := cmd.Flags().GetBool("show-sensitive")
 
-			// Convert interface{} to config.Instance structs
-			var instances []config.Instance
-			for _, item := range instancesInterface {
-				itemMap := item.(map[string]any)
-
-				instance := config.Instance{
-					Name:    getString(itemMap, "name"),
-					FQDN:    getString(itemMap, "fqdn"),
-					Token:   getString(itemMap, "token"),
-					Default: getBool(itemMap, "default"),
-				}
-				instances = append(instances, instance)
-			}
-
-			formatter, err := output.NewFormatter(format, output.Options{
+			formatter, fmtErr := output.NewFormatter(format, output.Options{
 				ShowSensitive: showSensitive,
 			})
-			if err != nil {
-				return err
+			if fmtErr != nil {
+				return fmtErr
 			}
 
-			return formatter.Format(instances)
+			return formatter.Format(cfg.Instances)
 		},
 	}
-}
-
-// Helper functions to safely extract values from map
-func getString(m map[string]interface{}, key string) string {
-	if val, ok := m[key]; ok {
-		if str, ok := val.(string); ok {
-			return str
-		}
-	}
-	return ""
-}
-
-func getBool(m map[string]interface{}, key string) bool {
-	if val, ok := m[key]; ok {
-		if b, ok := val.(bool); ok {
-			return b
-		}
-	}
-	return false
 }

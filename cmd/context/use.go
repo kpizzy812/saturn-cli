@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/saturn-platform/saturn-cli/internal/cli"
+	"github.com/saturn-platform/saturn-cli/internal/config"
 )
 
 // NewUseCommand creates the use command
@@ -18,45 +18,17 @@ func NewUseCommand() *cobra.Command {
 		Short:   "Switch to a different context (set as default)",
 		RunE: func(_ *cobra.Command, args []string) error {
 			name := args[0]
-			raw := viper.Get("instances")
 
-			instances, ok := raw.([]interface{})
-			if !ok {
-				return fmt.Errorf("invalid instances configuration")
-			}
-			// Check if instance exists
-			var found bool
-			for _, instance := range instances {
-				instanceMap, ok := instance.(map[string]interface{})
-				if !ok {
-					return fmt.Errorf("invalid instance configuration")
-				}
-				if val, ok := instanceMap["name"].(string); ok && val == name {
-					found = true
-					break
-				}
+			cfg, err := config.Load()
+			if err != nil {
+				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			if !found {
+			if err := cfg.SetDefault(name); err != nil {
 				return fmt.Errorf("Context '%s' not found", name)
 			}
 
-			// Update default
-			for _, instance := range instances {
-				instanceMap, ok := instance.(map[string]interface{})
-				if !ok {
-					return fmt.Errorf("invalid instance configuration")
-				}
-
-				if val, ok := instanceMap["name"].(string); ok && val == name {
-					instanceMap["default"] = true
-				} else {
-					delete(instanceMap, "default")
-				}
-			}
-
-			viper.Set("instances", instances)
-			if err := viper.WriteConfig(); err != nil {
+			if err := cfg.Save(); err != nil {
 				return fmt.Errorf("failed to write config: %w", err)
 			}
 

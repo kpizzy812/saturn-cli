@@ -57,6 +57,9 @@ func NewLogsCommand() *cobra.Command {
 			fmt.Print(resp.Logs)
 			lastLogs = resp.Logs
 
+			consecutiveErrors := 0
+			const maxConsecutiveErrors = 5
+
 			for {
 				select {
 				case <-sigChan:
@@ -65,8 +68,14 @@ func NewLogsCommand() *cobra.Command {
 				case <-ticker.C:
 					resp, err := appSvc.Logs(ctx, uuid, lines)
 					if err != nil {
+						consecutiveErrors++
+						if consecutiveErrors >= maxConsecutiveErrors {
+							return fmt.Errorf("lost connection after %d consecutive errors: %w", maxConsecutiveErrors, err)
+						}
+						fmt.Fprintf(os.Stderr, "Warning: failed to fetch logs (attempt %d/%d)\n", consecutiveErrors, maxConsecutiveErrors)
 						continue
 					}
+					consecutiveErrors = 0
 					if resp.Logs != lastLogs {
 						if len(resp.Logs) > len(lastLogs) && strings.HasPrefix(resp.Logs, lastLogs) {
 							fmt.Print(resp.Logs[len(lastLogs):])

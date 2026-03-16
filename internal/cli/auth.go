@@ -105,21 +105,24 @@ func SaveAuthToConfig(baseURL, token string) error {
 	return cfg.Save()
 }
 
-func openBrowser(url string) {
+func openBrowser(rawURL string) {
 	var cmd *exec.Cmd
 
 	ctx := context.Background()
 	switch runtime.GOOS {
 	case "darwin":
-		cmd = exec.CommandContext(ctx, "open", url)
+		cmd = exec.CommandContext(ctx, "open", rawURL)
 	case "linux":
-		cmd = exec.CommandContext(ctx, "xdg-open", url)
+		cmd = exec.CommandContext(ctx, "xdg-open", rawURL)
 	case "windows":
-		cmd = exec.CommandContext(ctx, "rundll32", "url.dll,FileProtocolHandler", url)
+		cmd = exec.CommandContext(ctx, "rundll32", "url.dll,FileProtocolHandler", rawURL)
 	default:
+		fmt.Println("Please open the URL above in your browser manually.")
 		return
 	}
 
-	// Best-effort — ignore errors (e.g. SSH sessions without display)
-	_ = cmd.Start()
+	// Best-effort — log on failure (e.g. SSH sessions without display)
+	if err := cmd.Start(); err != nil {
+		fmt.Println("Could not open browser automatically. Please open the URL above manually.")
+	}
 }

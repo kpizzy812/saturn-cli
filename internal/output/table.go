@@ -25,7 +25,7 @@ func (f *TableFormatter) Format(data any) (err error) {
 				err = fmt.Errorf("failed to flush table writer: %w", flushErr)
 			}
 		}
-		// Add a final newline nach table output, but only if no error occurred
+		// Add a final newline after table output, but only if no error occurred
 		if err == nil {
 			if _, nlErr := fmt.Fprintln(f.opts.Writer); nlErr != nil {
 				err = fmt.Errorf("failed to write trailing newline: %w", nlErr)
@@ -241,7 +241,11 @@ func (f *TableFormatter) formatValue(val reflect.Value) string {
 			return "[]"
 		}
 		// Check if it's a slice of structs
-		elemType := val.Index(0).Kind()
+		elem := val.Index(0)
+		if elem.Kind() == reflect.Ptr && !elem.IsNil() {
+			elem = elem.Elem()
+		}
+		elemType := elem.Kind()
 		if elemType == reflect.Struct || elemType == reflect.Ptr {
 			// For complex types, try to extract Name field from all elements
 			var names []string

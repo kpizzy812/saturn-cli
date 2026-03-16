@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/saturn-platform/saturn-cli/internal/api"
 	"github.com/saturn-platform/saturn-cli/internal/models"
@@ -73,10 +74,15 @@ func (s *DatabaseService) Update(ctx context.Context, uuid string, req *models.D
 
 // Delete deletes a database
 func (s *DatabaseService) Delete(ctx context.Context, uuid string, deleteConfigurations, deleteVolumes, dockerCleanup, deleteConnectedNetworks bool) error {
-	url := fmt.Sprintf("databases/%s?delete_configurations=%t&delete_volumes=%t&docker_cleanup=%t&delete_connected_networks=%t",
-		uuid, deleteConfigurations, deleteVolumes, dockerCleanup, deleteConnectedNetworks)
+	params := url.Values{
+		"delete_configurations":     {fmt.Sprintf("%t", deleteConfigurations)},
+		"delete_volumes":            {fmt.Sprintf("%t", deleteVolumes)},
+		"docker_cleanup":            {fmt.Sprintf("%t", dockerCleanup)},
+		"delete_connected_networks": {fmt.Sprintf("%t", deleteConnectedNetworks)},
+	}
+	endpoint := fmt.Sprintf("databases/%s?%s", uuid, params.Encode())
 
-	err := s.client.Delete(ctx, url)
+	err := s.client.Delete(ctx, endpoint)
 	if err != nil {
 		return fmt.Errorf("failed to delete database %s: %w", uuid, err)
 	}
@@ -145,7 +151,8 @@ func (s *DatabaseService) UpdateBackup(ctx context.Context, dbUUID, backupUUID s
 
 // DeleteBackup deletes a backup configuration
 func (s *DatabaseService) DeleteBackup(ctx context.Context, dbUUID, backupUUID string, deleteS3 bool) error {
-	url := fmt.Sprintf("databases/%s/backups/%s?delete_s3=%t", dbUUID, backupUUID, deleteS3)
+	params := url.Values{"delete_s3": {fmt.Sprintf("%t", deleteS3)}}
+	url := fmt.Sprintf("databases/%s/backups/%s?%s", dbUUID, backupUUID, params.Encode())
 	err := s.client.Delete(ctx, url)
 	if err != nil {
 		return fmt.Errorf("failed to delete backup %s for database %s: %w", backupUUID, dbUUID, err)
@@ -165,7 +172,8 @@ func (s *DatabaseService) ListBackupExecutions(ctx context.Context, dbUUID, back
 
 // DeleteBackupExecution deletes a specific backup execution
 func (s *DatabaseService) DeleteBackupExecution(ctx context.Context, dbUUID, backupUUID, executionUUID string, deleteS3 bool) error {
-	url := fmt.Sprintf("databases/%s/backups/%s/executions/%s?delete_s3=%t", dbUUID, backupUUID, executionUUID, deleteS3)
+	params := url.Values{"delete_s3": {fmt.Sprintf("%t", deleteS3)}}
+	url := fmt.Sprintf("databases/%s/backups/%s/executions/%s?%s", dbUUID, backupUUID, executionUUID, params.Encode())
 	err := s.client.Delete(ctx, url)
 	if err != nil {
 		return fmt.Errorf("failed to delete backup execution %s: %w", executionUUID, err)

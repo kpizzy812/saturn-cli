@@ -43,7 +43,7 @@ func TestDeploymentService_Deploy(t *testing.T) {
 			name:         "deploy with force",
 			uuid:         "res-789",
 			force:        true,
-			expectedPath: "/api/v1/deploy?uuid=res-789&force=true",
+			expectedPath: "/api/v1/deploy?force=true&uuid=res-789",
 			response: DeployResponse{
 				Deployments: []DeploymentInfo{
 					{
@@ -543,7 +543,7 @@ func TestDeploymentService_DeployByTag(t *testing.T) {
 			name:         "deploy by tag with force",
 			tag:          "production",
 			force:        true,
-			expectedPath: "/api/v1/deploy?tag=production&force=true",
+			expectedPath: "/api/v1/deploy?force=true&tag=production",
 			response: DeployResponse{
 				Deployments: []DeploymentInfo{
 					{
@@ -596,7 +596,7 @@ func TestDeploymentService_DeployByPR(t *testing.T) {
 			uuid:         "app-123",
 			prID:         42,
 			force:        false,
-			expectedPath: "/api/v1/deploy?uuid=app-123&pr=42",
+			expectedPath: "/api/v1/deploy?pr=42&uuid=app-123",
 			response: DeployResponse{
 				Deployments: []DeploymentInfo{
 					{
@@ -612,7 +612,7 @@ func TestDeploymentService_DeployByPR(t *testing.T) {
 			uuid:         "app-456",
 			prID:         99,
 			force:        true,
-			expectedPath: "/api/v1/deploy?uuid=app-456&pr=99&force=true",
+			expectedPath: "/api/v1/deploy?force=true&pr=99&uuid=app-456",
 			response: DeployResponse{
 				Deployments: []DeploymentInfo{
 					{

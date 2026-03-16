@@ -298,7 +298,7 @@ func TestDatabaseService_Delete(t *testing.T) {
 			deleteConnectedNetworks: true,
 			statusCode:              http.StatusOK,
 			wantErr:                 false,
-			expectedQueryString:     "delete_configurations=true&delete_volumes=true&docker_cleanup=true&delete_connected_networks=true",
+			expectedQueryString:     "delete_configurations=true&delete_connected_networks=true&delete_volumes=true&docker_cleanup=true",
 		},
 		{
 			name:                    "successful delete without cleanup",
@@ -309,7 +309,7 @@ func TestDatabaseService_Delete(t *testing.T) {
 			deleteConnectedNetworks: false,
 			statusCode:              http.StatusOK,
 			wantErr:                 false,
-			expectedQueryString:     "delete_configurations=false&delete_volumes=false&docker_cleanup=false&delete_connected_networks=false",
+			expectedQueryString:     "delete_configurations=false&delete_connected_networks=false&delete_volumes=false&docker_cleanup=false",
 		},
 		{
 			name:                    "not found",

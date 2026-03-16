@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/saturn-platform/saturn-cli/internal/cli"
 	"github.com/saturn-platform/saturn-cli/internal/config"
@@ -21,50 +20,27 @@ func NewGetCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
 
-			instancesRaw := viper.Get("instances")
-			if instancesRaw == nil {
-				instancesRaw = []any{}
+			cfg, err := config.Load()
+			if err != nil {
+				return fmt.Errorf("failed to load config: %w", err)
 			}
-			instancesInterface := instancesRaw.([]any)
+
+			instance, err := cfg.GetInstance(name)
+			if err != nil {
+				return fmt.Errorf("Context '%s' not found", name)
+			}
 
 			format, _ := cmd.Flags().GetString("format")
 			showSensitive, _ := cmd.Flags().GetBool("show-sensitive")
 
-			// Convert interface{} to config.Instance structs
-			var instances []config.Instance
-			for _, item := range instancesInterface {
-				itemMap := item.(map[string]any)
-
-				instance := config.Instance{
-					Name:    getString(itemMap, "name"),
-					FQDN:    getString(itemMap, "fqdn"),
-					Token:   getString(itemMap, "token"),
-					Default: getBool(itemMap, "default"),
-				}
-				instances = append(instances, instance)
-			}
-
-			// If a name was provided, filter to that single instance
-			var results []config.Instance
-			for _, inst := range instances {
-				if inst.Name == name {
-					results = append(results, inst)
-					break
-				}
-			}
-
-			if len(results) == 0 {
-				return fmt.Errorf("Context '%s' not found", name)
-			}
-
-			formatter, err := output.NewFormatter(format, output.Options{
+			formatter, fmtErr := output.NewFormatter(format, output.Options{
 				ShowSensitive: showSensitive,
 			})
-			if err != nil {
-				return err
+			if fmtErr != nil {
+				return fmtErr
 			}
 
-			return formatter.Format(results)
+			return formatter.Format([]config.Instance{*instance})
 		},
 	}
 }

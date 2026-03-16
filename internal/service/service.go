@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/saturn-platform/saturn-cli/internal/api"
 	"github.com/saturn-platform/saturn-cli/internal/models"
@@ -60,10 +61,15 @@ func (s *Service) Update(ctx context.Context, uuid string, req *models.ServiceUp
 
 // Delete deletes a service
 func (s *Service) Delete(ctx context.Context, uuid string, deleteConfigurations, deleteVolumes, dockerCleanup, deleteConnectedNetworks bool) error {
-	url := fmt.Sprintf("services/%s?delete_configurations=%t&delete_volumes=%t&docker_cleanup=%t&delete_connected_networks=%t",
-		uuid, deleteConfigurations, deleteVolumes, dockerCleanup, deleteConnectedNetworks)
+	params := url.Values{
+		"delete_configurations":     {fmt.Sprintf("%t", deleteConfigurations)},
+		"delete_volumes":            {fmt.Sprintf("%t", deleteVolumes)},
+		"docker_cleanup":            {fmt.Sprintf("%t", dockerCleanup)},
+		"delete_connected_networks": {fmt.Sprintf("%t", deleteConnectedNetworks)},
+	}
+	endpoint := fmt.Sprintf("services/%s?%s", uuid, params.Encode())
 
-	err := s.client.Delete(ctx, url)
+	err := s.client.Delete(ctx, endpoint)
 	if err != nil {
 		return fmt.Errorf("failed to delete service %s: %w", uuid, err)
 	}

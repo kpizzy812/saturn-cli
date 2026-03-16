@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/saturn-platform/saturn-cli/internal/cli"
 	"github.com/saturn-platform/saturn-cli/internal/config"
@@ -25,35 +24,37 @@ func NewAddCommand() *cobra.Command {
 			force, _ := cmd.Flags().GetBool("force")
 			setDefault, _ := cmd.Flags().GetBool("default")
 
-			instances := viper.Get("instances").([]any)
+			cfg, err := config.Load()
+			if err != nil {
+				cfg = config.New()
+			}
 
 			// Check if instance already exists
-			for _, instance := range instances {
-				instanceMap := instance.(map[string]any)
-				if instanceMap["name"] == name {
-					if force {
-						instanceMap["token"] = token
-						if setDefault {
-							// Remove default from all instances
-							for _, inst := range instances {
-								instMap := inst.(map[string]any)
-								instMap["default"] = false
-							}
-							instanceMap["default"] = true
-							fmt.Printf("%s already exists. Force overwriting. Setting it as default.\n", name)
-						} else {
-							fmt.Printf("%s already exists. Force overwriting.\n", name)
-						}
-						viper.Set("instances", instances)
-						if err := viper.WriteConfig(); err != nil {
-							return fmt.Errorf("failed to write config: %w", err)
-						}
-						return nil
-					}
+			existing, _ := cfg.GetInstance(name)
+			if existing != nil {
+				if !force {
 					fmt.Printf("%s already exists.\n", name)
 					fmt.Println("\nNote: Use --force to force overwrite.")
 					return nil
 				}
+
+				// Force overwrite: update token and FQDN
+				existing.Token = token
+				existing.FQDN = host
+
+				if setDefault {
+					if err := cfg.SetDefault(name); err != nil {
+						return fmt.Errorf("failed to set default: %w", err)
+					}
+					fmt.Printf("%s already exists. Force overwriting. Setting it as default.\n", name)
+				} else {
+					fmt.Printf("%s already exists. Force overwriting.\n", name)
+				}
+
+				if err := cfg.Save(); err != nil {
+					return fmt.Errorf("failed to write config: %w", err)
+				}
+				return nil
 			}
 
 			// Add new instance
@@ -61,25 +62,20 @@ func NewAddCommand() *cobra.Command {
 				Name:    name,
 				FQDN:    host,
 				Token:   token,
-				Default: false,
+				Default: setDefault,
+			}
+
+			if err := cfg.AddInstance(newInstance); err != nil {
+				return fmt.Errorf("failed to add instance: %w", err)
 			}
 
 			if setDefault {
-				// Remove default from all instances
-				for _, inst := range instances {
-					instMap := inst.(map[string]any)
-					instMap["default"] = false
-				}
-				newInstance.Default = true
-				fmt.Printf("Context '%s' added and set as default.\n", newInstance.Name)
+				fmt.Printf("Context '%s' added and set as default.\n", name)
 			} else {
-				fmt.Printf("Context '%s' added successfully.\n", newInstance.Name)
+				fmt.Printf("Context '%s' added successfully.\n", name)
 			}
 
-			instances = append(instances, newInstance)
-
-			viper.Set("instances", instances)
-			if err := viper.WriteConfig(); err != nil {
+			if err := cfg.Save(); err != nil {
 				return fmt.Errorf("failed to write config: %w", err)
 			}
 			return nil

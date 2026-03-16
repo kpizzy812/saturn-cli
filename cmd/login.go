@@ -17,7 +17,7 @@ func NewLoginCommand() *cobra.Command {
 		Short: "Authenticate with a Saturn instance via browser",
 		Long: `Opens your browser to authorize the Saturn CLI.
 
-If no URL is provided, uses the default instance URL from your config.
+If no URL is provided, defaults to https://saturn.ac.
 After authorization, the token is saved automatically.`,
 		Example: `  saturn login
   saturn login https://saturn.ac
@@ -49,7 +49,9 @@ func runLogin(args []string) error {
 	}
 
 	if baseURL == "" {
-		return fmt.Errorf("no Saturn URL provided. Usage: saturn login <url>\nExample: saturn login https://saturn.ac")
+		// Default to the main Saturn instance
+		baseURL = "https://saturn.ac"
+		fmt.Println("No URL specified, using default: https://saturn.ac")
 	}
 
 	// Normalize
