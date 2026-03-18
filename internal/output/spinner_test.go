@@ -20,7 +20,7 @@ func TestSpinnerStartStop(t *testing.T) {
 	sp.Success("deployed!")
 }
 
-func TestSpinnerFail(t *testing.T) {
+func TestSpinnerFail(_ *testing.T) {
 	sp := NewSpinner("deploying...")
 	sp.Fail("deployment failed")
 }

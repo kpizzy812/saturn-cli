@@ -42,8 +42,8 @@ func TestPullCommandFlags(t *testing.T) {
 
 	t.Run("requires exactly 1 argument", func(t *testing.T) {
 		// ArgsFunc should reject 0 and 2 args, accept exactly 1
-		assert.Error(t, cmd.Args(cmd, []string{}))
-		assert.Error(t, cmd.Args(cmd, []string{"a", "b"}))
+		require.Error(t, cmd.Args(cmd, []string{}))
+		require.Error(t, cmd.Args(cmd, []string{"a", "b"}))
 		assert.NoError(t, cmd.Args(cmd, []string{"uuid-123"}))
 	})
 }

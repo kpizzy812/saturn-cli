@@ -154,7 +154,7 @@ func TestGitHubAppService_Create(t *testing.T) {
 		assert.Equal(t, "Bearer test-token", r.Header.Get("Authorization"))
 
 		var body models.GitHubAppCreateRequest
-		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		assert.NoError(t, json.NewDecoder(r.Body).Decode(&body))
 		assert.Equal(t, "New GitHub App", body.Name)
 		assert.Equal(t, 99999, body.AppID)
 		assert.Equal(t, "client-id-123", body.ClientID)
@@ -188,7 +188,7 @@ func TestGitHubAppService_Update(t *testing.T) {
 		assert.Equal(t, "Bearer test-token", r.Header.Get("Authorization"))
 
 		var body models.GitHubAppUpdateRequest
-		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		assert.NoError(t, json.NewDecoder(r.Body).Decode(&body))
 		assert.Equal(t, "Updated GitHub App", *body.Name)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -259,9 +259,9 @@ func TestGitHubAppService_ListRepositories(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, result, 2)
 	assert.Equal(t, "my-org/my-repo", result[0].FullName)
-	assert.Equal(t, false, result[0].Private)
+	assert.False(t, result[0].Private)
 	assert.Equal(t, "my-org/private-repo", result[1].FullName)
-	assert.Equal(t, true, result[1].Private)
+	assert.True(t, result[1].Private)
 }
 
 func TestGitHubAppService_ListBranches(t *testing.T) {
@@ -290,8 +290,8 @@ func TestGitHubAppService_ListBranches(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, result, 3)
 	assert.Equal(t, "main", result[0].Name)
-	assert.Equal(t, true, result[0].Protected)
+	assert.True(t, result[0].Protected)
 	assert.Equal(t, "develop", result[1].Name)
-	assert.Equal(t, false, result[1].Protected)
+	assert.False(t, result[1].Protected)
 	assert.Equal(t, "feature/my-feature", result[2].Name)
 }

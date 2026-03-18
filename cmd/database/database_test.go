@@ -46,7 +46,7 @@ func TestDatabaseStartCommand_Args(t *testing.T) {
 	require.NotNil(t, cmd.Args)
 
 	err := cmd.Args(cmd, []string{})
-	assert.Error(t, err, "should require UUID argument")
+	require.Error(t, err, "should require UUID argument")
 
 	err = cmd.Args(cmd, []string{"some-uuid"})
 	assert.NoError(t, err, "should accept single UUID")

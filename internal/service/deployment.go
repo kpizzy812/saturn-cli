@@ -411,7 +411,7 @@ func (s *DeploymentService) GetLogsByDeploymentWithFormat(ctx context.Context, d
 	formattedLogs, err := models.ParseAndFormatLogs(*deployment.Logs, showHidden)
 	if err != nil {
 		// Fallback to raw logs if parsing fails
-		return *deployment.Logs, nil
+		return *deployment.Logs, nil //nolint:nilerr
 	}
 	return formattedLogs, nil
 }

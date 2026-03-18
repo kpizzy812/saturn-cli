@@ -39,11 +39,12 @@ func NewDeleteCommand() *cobra.Command {
 				return fmt.Errorf("failed to write config: %w", err)
 			}
 
-			if wasDefault && len(cfg.Instances) > 0 {
+			switch {
+			case wasDefault && len(cfg.Instances) > 0:
 				fmt.Printf("Context '%s' deleted. '%s' is now the default context.\n", name, cfg.Instances[0].Name)
-			} else if len(cfg.Instances) == 0 {
+			case len(cfg.Instances) == 0:
 				fmt.Printf("Context '%s' deleted. No contexts remaining.\n", name)
-			} else {
+			default:
 				fmt.Printf("Context '%s' deleted.\n", name)
 			}
 

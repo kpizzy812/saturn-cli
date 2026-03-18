@@ -1001,7 +1001,7 @@ func TestDatabaseService_List_InfersType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				_, _ = w.Write([]byte(tt.dbJSON))
 			}))
@@ -1020,7 +1020,7 @@ func TestDatabaseService_List_InfersType(t *testing.T) {
 
 func TestDatabaseService_Get_InfersType(t *testing.T) {
 	// Verify inferDatabaseType is called on Get when Type is empty
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		// Return DB with no type but with mysql_database set
 		_, _ = w.Write([]byte(`{"uuid":"db-1","name":"mydb","status":"running","mysql_database":"appdb"}`))

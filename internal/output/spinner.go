@@ -7,8 +7,14 @@ type Spinner struct {
 	spinner *pterm.SpinnerPrinter
 }
 
-// NewSpinner creates and starts a spinner with the given text
+// NewSpinner creates and starts a spinner with the given text.
+// When pterm output is disabled (e.g. tests, CI), the spinner is created inactive
+// to prevent pterm's internal goroutine from causing data races under -race.
 func NewSpinner(text string) *Spinner {
+	if !pterm.Output {
+		p := pterm.DefaultSpinner.WithRemoveWhenDone(false)
+		return &Spinner{spinner: p}
+	}
 	sp, _ := pterm.DefaultSpinner.
 		WithRemoveWhenDone(false).
 		Start(text)

@@ -20,17 +20,17 @@ func NewStatusCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			styler := output.DefaultStyler()
 
-			// Load config
-			cfg, err := config.Load()
-			if err != nil || len(cfg.Instances) == 0 {
+			// Load config — treat all config errors as "not logged in" (intentional fallthrough)
+			cfg, cfgErr := config.Load()
+			if cfgErr != nil || len(cfg.Instances) == 0 {
 				styler.Warning("Not logged in. Run: saturn login")
-				return nil
+				return nil //nolint:nilerr
 			}
 
 			instance, err := cfg.GetDefault()
 			if err != nil {
 				styler.Warning("No default context set. Run: saturn context use <name>")
-				return nil
+				return nil //nolint:nilerr
 			}
 
 			styler.Bold("Saturn Status")

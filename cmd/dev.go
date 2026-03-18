@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -96,8 +97,8 @@ Examples:
 			styler.Info(fmt.Sprintf("Starting: %s", devCommand))
 
 			// Build command with env vars loaded from envFile
-			shell, shellFlag := detectShell()
-			cmdArgs := []string{shellFlag, fmt.Sprintf("set -a; source %s; set +a; %s", envFile, devCommand)}
+			shell := detectShell()
+			cmdArgs := []string{"-c", fmt.Sprintf("set -a; source %s; set +a; %s", envFile, devCommand)}
 			c := exec.CommandContext(ctx, shell, cmdArgs...)
 			c.Stdin = os.Stdin
 			c.Stdout = os.Stdout
@@ -159,24 +160,16 @@ func detectDevCommand() string {
 	return ""
 }
 
-// detectShell returns the shell binary and the flag to execute a command string
-func detectShell() (string, string) {
+// detectShell returns the shell binary to use for executing command strings
+func detectShell() string {
 	if shell := os.Getenv("SHELL"); shell != "" {
-		return shell, "-c"
+		return shell
 	}
 	// Fallback to sh
-	return "sh", "-c"
+	return "sh"
 }
 
 // isExitError checks if err is an *exec.ExitError and sets the pointer
 func isExitError(err error, target **exec.ExitError) bool {
-	var exitErr *exec.ExitError
-	if ok := func() bool {
-		exitErr, _ = err.(*exec.ExitError)
-		return exitErr != nil
-	}(); ok {
-		*target = exitErr
-		return true
-	}
-	return false
+	return errors.As(err, target)
 }
