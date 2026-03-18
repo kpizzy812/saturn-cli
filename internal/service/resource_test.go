@@ -30,7 +30,7 @@ func TestResourceService_List_Empty(t *testing.T) {
 }
 
 func TestResourceService_List_Error(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, `{"message":"internal error"}`, http.StatusInternalServerError)
 	}))
 	defer server.Close()
