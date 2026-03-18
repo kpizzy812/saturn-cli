@@ -6,7 +6,7 @@ import "github.com/spf13/cobra"
 func NewProjectCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "project",
-		Aliases: []string{"projects"},
+		Aliases: []string{"projects", "proj"},
 		Short:   "Project related commands",
 		Long:    `Manage Saturn projects - list all projects or get details about a specific project.`,
 	}

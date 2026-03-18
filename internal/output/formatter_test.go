@@ -265,3 +265,73 @@ func TestTableFormatter_SliceField(t *testing.T) {
 	// Tags should be comma-separated
 	assert.Contains(t, output, "tag1, tag2, tag3")
 }
+
+type testSensitiveItem struct {
+	Name  string `json:"name"`
+	Token string `json:"token" sensitive:"true"`
+}
+
+type testSkipFieldItem struct {
+	Name    string `json:"name"`
+	Hidden  string `json:"-"`
+	Skipped string `json:"skipped" table:"-"`
+}
+
+func TestTableFormatter_SensitiveHidden(t *testing.T) {
+	var buf bytes.Buffer
+	f := NewTableFormatter(Options{Writer: &buf, ShowSensitive: false})
+
+	items := []testSensitiveItem{{Name: "app", Token: "secret123"}}
+	err := f.Format(items)
+	require.NoError(t, err)
+
+	out := buf.String()
+	assert.Contains(t, out, "app")
+	assert.Contains(t, out, SensitiveOverlay)
+	assert.NotContains(t, out, "secret123")
+}
+
+func TestTableFormatter_SensitiveShown(t *testing.T) {
+	var buf bytes.Buffer
+	f := NewTableFormatter(Options{Writer: &buf, ShowSensitive: true})
+
+	items := []testSensitiveItem{{Name: "app", Token: "secret123"}}
+	err := f.Format(items)
+	require.NoError(t, err)
+
+	out := buf.String()
+	assert.Contains(t, out, "secret123")
+	assert.NotContains(t, out, SensitiveOverlay)
+}
+
+func TestTableFormatter_SkippedFields(t *testing.T) {
+	var buf bytes.Buffer
+	f := NewTableFormatter(Options{Writer: &buf})
+
+	items := []testSkipFieldItem{{Name: "visible", Hidden: "nope", Skipped: "also nope"}}
+	err := f.Format(items)
+	require.NoError(t, err)
+
+	out := buf.String()
+	assert.Contains(t, out, "visible")
+	assert.NotContains(t, out, "nope")
+}
+
+func TestTableFormatter_UnsupportedType(t *testing.T) {
+	var buf bytes.Buffer
+	f := NewTableFormatter(Options{Writer: &buf})
+
+	err := f.Format("plain string")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unsupported data type")
+}
+
+func TestTableFormatter_Pointer(t *testing.T) {
+	var buf bytes.Buffer
+	f := NewTableFormatter(Options{Writer: &buf})
+
+	item := &TestServer{UUID: "ptr-uuid", Name: "ptr-server", Status: "ok"}
+	err := f.Format(item)
+	require.NoError(t, err)
+	assert.Contains(t, buf.String(), "ptr-server")
+}

@@ -125,10 +125,23 @@ detect_platform() {
 get_latest_version() {
   echo "Fetching latest release version..." >&2
   local latest_version
-  latest_version=$(curl -sSf "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  local api_response
+  api_response=$(curl -sSf "https://api.github.com/repos/${REPO}/releases/latest" 2>&1) || \
+    error_exit "Failed to reach GitHub API"
+
+  # Try jq first, then python3, then python, then fall back to grep
+  if command -v jq &> /dev/null; then
+    latest_version=$(echo "$api_response" | jq -r '.tag_name // empty')
+  elif command -v python3 &> /dev/null; then
+    latest_version=$(echo "$api_response" | python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'])" 2>/dev/null)
+  elif command -v python &> /dev/null; then
+    latest_version=$(echo "$api_response" | python -c "import sys,json; print(json.load(sys.stdin)['tag_name'])" 2>/dev/null)
+  else
+    latest_version=$(echo "$api_response" | grep '"tag_name":' | grep -oP '"tag_name":\s*"\K[^"]*')
+  fi
 
   if [ -z "$latest_version" ]; then
-    error_exit "Failed to fetch latest release version from GitHub"
+    error_exit "Failed to parse latest release version from GitHub API response"
   fi
 
   echo "$latest_version"

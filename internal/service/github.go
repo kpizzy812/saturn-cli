@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/saturn-platform/saturn-cli/internal/api"
 	"github.com/saturn-platform/saturn-cli/internal/models"
@@ -93,7 +94,7 @@ func (s *GitHubAppService) ListBranches(ctx context.Context, appUUID string, own
 		Branches []models.GitHubBranch `json:"branches"`
 	}
 	var resp response
-	err := s.client.Get(ctx, fmt.Sprintf("github-apps/%s/repositories/%s/%s/branches", appUUID, owner, repo), &resp)
+	err := s.client.Get(ctx, fmt.Sprintf("github-apps/%s/repositories/%s/%s/branches", appUUID, url.PathEscape(owner), url.PathEscape(repo)), &resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list branches for %s/%s: %w", owner, repo, err)
 	}

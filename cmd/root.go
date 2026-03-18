@@ -56,6 +56,12 @@ func Execute() {
 	}
 }
 
+// NewRootCommand returns the root cobra.Command (after init() has been called).
+// Primarily used in tests to inspect registered subcommands and flags.
+func NewRootCommand() *cobra.Command {
+	return rootCmd
+}
+
 func init() {
 	rootCmd = &cobra.Command{
 		Use:           "saturn",
@@ -96,6 +102,9 @@ func init() {
 	rootCmd.AddCommand(NewDocsCommand())
 	rootCmd.AddCommand(NewInitCommand())
 	rootCmd.AddCommand(NewLoginCommand())
+	rootCmd.AddCommand(NewPullCommand())
+	rootCmd.AddCommand(NewStatusCommand())
+	rootCmd.AddCommand(NewDevCommand())
 }
 
 func initConfig() {

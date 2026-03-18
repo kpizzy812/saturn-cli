@@ -2,6 +2,7 @@ package deployment
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -73,6 +74,17 @@ func NewNameCommand() *cobra.Command {
 			} else {
 				if err := formatter.Format(result); err != nil {
 					return err
+				}
+			}
+
+			// Show application URL if available (FQDN is *string)
+			styler := output.DefaultStyler()
+			appSvc := service.NewApplicationService(client)
+			app, appErr := appSvc.Get(ctx, matchedUUID)
+			if appErr == nil && app.FQDN != nil && *app.FQDN != "" {
+				styler.Info("Application URL:")
+				for _, fqdn := range strings.Split(*app.FQDN, ",") {
+					styler.URL("  " + strings.TrimSpace(fqdn))
 				}
 			}
 

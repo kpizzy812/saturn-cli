@@ -3,6 +3,7 @@ package application
 import (
 	"fmt"
 
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 
 	"github.com/saturn-platform/saturn-cli/internal/cli"
@@ -44,14 +45,14 @@ func NewListCommand() *cobra.Command {
 				return formatter.Format(apps)
 			}
 
-			// For table format, convert to simplified rows
+			// For table format, convert to simplified rows with colored status
 			var rows []models.ApplicationListItem
 			for _, app := range apps {
 				rows = append(rows, models.ApplicationListItem{
 					UUID:        app.UUID,
 					Name:        app.Name,
 					Description: app.Description,
-					Status:      app.Status,
+					Status:      colorizeStatus(app.Status),
 					GitBranch:   app.GitBranch,
 					FQDN:        app.FQDN,
 				})
@@ -66,5 +67,23 @@ func NewListCommand() *cobra.Command {
 
 			return formatter.Format(rows)
 		},
+	}
+}
+
+// colorizeStatus returns a pterm-colored string for the given deployment status
+func colorizeStatus(status string) string {
+	switch status {
+	case "running":
+		return pterm.FgGreen.Sprint(status)
+	case "stopped", "exited":
+		return pterm.FgGray.Sprint(status)
+	case "restarting":
+		return pterm.FgYellow.Sprint(status)
+	case "error", "failed", "unhealthy":
+		return pterm.FgRed.Sprint(status)
+	case "starting", "building", "deploying":
+		return pterm.FgCyan.Sprint(status)
+	default:
+		return status
 	}
 }

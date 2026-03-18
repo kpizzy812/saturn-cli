@@ -848,6 +848,194 @@ func TestDatabaseService_DeleteBackupExecution(t *testing.T) {
 	}
 }
 
+func TestDatabaseService_CreateBackup(t *testing.T) {
+	tests := []struct {
+		name           string
+		dbUUID         string
+		request        *models.DatabaseBackupCreateRequest
+		serverResponse string
+		statusCode     int
+		wantErr        bool
+		wantUUID       string
+	}{
+		{
+			name:   "successful create",
+			dbUUID: "db-uuid-1",
+			request: &models.DatabaseBackupCreateRequest{
+				Frequency: stringPtr("0 2 * * *"),
+				Enabled:   boolPtr(true),
+			},
+			serverResponse: `{
+				"uuid": "backup-uuid-new",
+				"enabled": true,
+				"frequency": "0 2 * * *"
+			}`,
+			statusCode: http.StatusCreated,
+			wantErr:    false,
+			wantUUID:   "backup-uuid-new",
+		},
+		{
+			name:   "server error",
+			dbUUID: "db-uuid-1",
+			request: &models.DatabaseBackupCreateRequest{
+				Enabled: boolPtr(true),
+			},
+			serverResponse: `{"error":"internal server error"}`,
+			statusCode:     http.StatusInternalServerError,
+			wantErr:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				assert.Equal(t, "/api/v1/databases/"+tt.dbUUID+"/backups", r.URL.Path)
+				assert.Equal(t, http.MethodPost, r.Method)
+
+				var req models.DatabaseBackupCreateRequest
+				_ = json.NewDecoder(r.Body).Decode(&req)
+
+				w.WriteHeader(tt.statusCode)
+				_, _ = w.Write([]byte(tt.serverResponse))
+			}))
+			defer server.Close()
+
+			client := api.NewClient(server.URL, "test-token")
+			dbService := NewDatabaseService(client)
+
+			backup, err := dbService.CreateBackup(context.Background(), tt.dbUUID, tt.request)
+
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantUUID, backup.UUID)
+		})
+	}
+}
+
+func TestDatabaseService_List_InfersType(t *testing.T) {
+	tests := []struct {
+		name         string
+		dbJSON       string
+		expectedType string
+	}{
+		{
+			name:         "infers postgresql from postgres_user",
+			dbJSON:       `[{"uuid":"db-1","name":"pg","status":"running","postgres_user":"pguser"}]`,
+			expectedType: "postgresql",
+		},
+		{
+			name:         "infers postgresql from postgres_password",
+			dbJSON:       `[{"uuid":"db-1","name":"pg","status":"running","postgres_password":"secret"}]`,
+			expectedType: "postgresql",
+		},
+		{
+			name:         "infers postgresql from postgres_db",
+			dbJSON:       `[{"uuid":"db-1","name":"pg","status":"running","postgres_db":"mydb"}]`,
+			expectedType: "postgresql",
+		},
+		{
+			name:         "infers mysql from mysql_user",
+			dbJSON:       `[{"uuid":"db-1","name":"my","status":"running","mysql_user":"myuser"}]`,
+			expectedType: "mysql",
+		},
+		{
+			name:         "infers mysql from mysql_password",
+			dbJSON:       `[{"uuid":"db-1","name":"my","status":"running","mysql_password":"mypass"}]`,
+			expectedType: "mysql",
+		},
+		{
+			name:         "infers mariadb from mariadb_user",
+			dbJSON:       `[{"uuid":"db-1","name":"ma","status":"running","mariadb_user":"mauser"}]`,
+			expectedType: "mariadb",
+		},
+		{
+			name:         "infers mongodb from mongo_initdb_root_username",
+			dbJSON:       `[{"uuid":"db-1","name":"mo","status":"running","mongo_initdb_root_username":"admin"}]`,
+			expectedType: "mongodb",
+		},
+		{
+			name:         "infers redis from redis_password",
+			dbJSON:       `[{"uuid":"db-1","name":"re","status":"running","redis_password":"redispass"}]`,
+			expectedType: "redis",
+		},
+		{
+			name:         "infers redis from redis_conf",
+			dbJSON:       `[{"uuid":"db-1","name":"re","status":"running","redis_conf":"maxmemory 100mb"}]`,
+			expectedType: "redis",
+		},
+		{
+			name:         "infers keydb from keydb_password",
+			dbJSON:       `[{"uuid":"db-1","name":"kd","status":"running","keydb_password":"kdpass"}]`,
+			expectedType: "keydb",
+		},
+		{
+			name:         "infers clickhouse from clickhouse_admin_user",
+			dbJSON:       `[{"uuid":"db-1","name":"ch","status":"running","clickhouse_admin_user":"chuser"}]`,
+			expectedType: "clickhouse",
+		},
+		{
+			name:         "infers dragonfly from dragonfly_password",
+			dbJSON:       `[{"uuid":"db-1","name":"df","status":"running","dragonfly_password":"dfpass"}]`,
+			expectedType: "dragonfly",
+		},
+		{
+			name:         "infers type from image with tag",
+			dbJSON:       `[{"uuid":"db-1","name":"pg","status":"running","image":"postgres:16-alpine"}]`,
+			expectedType: "postgres",
+		},
+		{
+			name:         "infers type from image without tag",
+			dbJSON:       `[{"uuid":"db-1","name":"my","status":"running","image":"mysql"}]`,
+			expectedType: "mysql",
+		},
+		{
+			name:         "unknown type stays empty",
+			dbJSON:       `[{"uuid":"db-1","name":"unknown","status":"running"}]`,
+			expectedType: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(tt.dbJSON))
+			}))
+			defer server.Close()
+
+			client := api.NewClient(server.URL, "test-token")
+			dbService := NewDatabaseService(client)
+
+			dbs, err := dbService.List(context.Background())
+			require.NoError(t, err)
+			require.Len(t, dbs, 1)
+			assert.Equal(t, tt.expectedType, dbs[0].Type)
+		})
+	}
+}
+
+func TestDatabaseService_Get_InfersType(t *testing.T) {
+	// Verify inferDatabaseType is called on Get when Type is empty
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		// Return DB with no type but with mysql_database set
+		_, _ = w.Write([]byte(`{"uuid":"db-1","name":"mydb","status":"running","mysql_database":"appdb"}`))
+	}))
+	defer server.Close()
+
+	client := api.NewClient(server.URL, "test-token")
+	dbService := NewDatabaseService(client)
+
+	db, err := dbService.Get(context.Background(), "db-1")
+	require.NoError(t, err)
+	require.NotNil(t, db)
+	assert.Equal(t, "mysql", db.Type)
+}
+
 func stringPtr(s string) *string {
 	return &s
 }

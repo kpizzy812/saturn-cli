@@ -144,7 +144,7 @@ function Get-LatestVersion {
     Write-Host "Fetching latest release version..."
 
     try {
-        $response = Invoke-RestMethod -Uri "https://api.github.com/repos/$Script:REPO/releases/latest" -Method Get
+        $response = Invoke-RestMethod -Uri "https://api.github.com/repos/$Script:REPO/releases/latest" -Method Get -TimeoutSec 30
         $latestVersion = $response.tag_name
 
         if (-not $latestVersion) {

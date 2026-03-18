@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/saturn-platform/saturn-cli/internal/output"
 	"github.com/saturn-platform/saturn-cli/internal/service"
 )
 
@@ -42,42 +43,49 @@ func HandleWait(cmd *cobra.Command, deploySvc *service.DeploymentService, deploy
 
 	pollInterval := time.Duration(pollSec) * time.Second
 
+	sp := output.NewSpinner(fmt.Sprintf("Waiting for %d deployment(s) (timeout: %ds)...", len(deploymentUUIDs), timeoutSec))
+
 	// Track last printed status per UUID to avoid spamming
 	lastStatus := make(map[string]string)
 
 	onStatus := func(uuid, status string) {
 		if lastStatus[uuid] != status {
 			lastStatus[uuid] = status
-			fmt.Fprintf(cmd.OutOrStdout(), "  [%s] %s\n", uuid, status)
+			sp.UpdateText(fmt.Sprintf("Waiting for %d deployment(s): [%s] %s", len(deploymentUUIDs), uuid, status))
 		}
 	}
 
-	fmt.Fprintf(cmd.OutOrStdout(), "Waiting for %d deployment(s) to complete (timeout: %ds)...\n", len(deploymentUUIDs), timeoutSec)
-
 	results, err := deploySvc.WaitForMultiple(ctx, deploymentUUIDs, pollInterval, onStatus)
 
-	// Print final summary
+	// Determine overall success
 	allSuccess := true
 	for _, res := range results {
-		if res.Finished {
-			fmt.Fprintf(cmd.OutOrStdout(), "  [%s] finished\n", res.DeploymentUUID)
-		} else {
+		if !res.Finished {
 			allSuccess = false
-			fmt.Fprintf(cmd.ErrOrStderr(), "  [%s] %s\n", res.DeploymentUUID, res.Status)
 		}
 	}
 
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
+			sp.Fail(fmt.Sprintf("Wait timeout exceeded (%ds)", timeoutSec))
 			return fmt.Errorf("wait timeout exceeded (%ds), exit code %d", timeoutSec, ExitCodeWaitTimeout)
 		}
+		sp.Fail(fmt.Sprintf("Error waiting for deployments: %v", err))
 		return fmt.Errorf("error waiting for deployments: %w", err)
 	}
 
 	if !allSuccess {
+		// Print per-deployment status for failures
+		for _, res := range results {
+			if !res.Finished {
+				fmt.Fprintf(cmd.ErrOrStderr(), "  [%s] %s\n", res.DeploymentUUID, res.Status)
+			}
+		}
+		sp.Fail("One or more deployments did not finish successfully")
 		return fmt.Errorf("one or more deployments did not finish successfully")
 	}
 
+	sp.Success(fmt.Sprintf("All %d deployment(s) completed successfully", len(deploymentUUIDs)))
 	return nil
 }
 

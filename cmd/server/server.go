@@ -8,7 +8,7 @@ import (
 func NewServerCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "server",
-		Aliases: []string{"servers"},
+		Aliases: []string{"servers", "srv"},
 		Short:   "Server related commands",
 		Long:    `Manage Saturn servers - list, get details, add new servers, validate connections, and remove servers.`,
 	}

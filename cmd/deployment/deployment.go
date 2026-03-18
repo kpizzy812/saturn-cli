@@ -5,8 +5,9 @@ import "github.com/spf13/cobra"
 // NewDeploymentCommand creates the deployment parent command with all subcommands
 func NewDeploymentCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "deploy",
-		Short: "Deploy related commands",
+		Use:     "deploy",
+		Aliases: []string{"dep", "deployment"},
+		Short:   "Deploy related commands",
 	}
 
 	// Add all deployment subcommands

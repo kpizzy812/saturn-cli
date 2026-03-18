@@ -15,15 +15,19 @@ import (
 
 // AuthService handles CLI device auth flow (unauthenticated endpoints)
 type AuthService struct {
-	httpClient *http.Client
-	baseURL    string
+	httpClient     *http.Client
+	pollHTTPClient *http.Client
+	baseURL        string
 }
 
 // NewAuthService creates a new auth service
 func NewAuthService(baseURL string) *AuthService {
 	return &AuthService{
+		// Used for initiation requests — may take longer
 		httpClient: &http.Client{Timeout: 30 * time.Second},
-		baseURL:    baseURL,
+		// Used for polling — must complete well within the poll interval
+		pollHTTPClient: &http.Client{Timeout: 8 * time.Second},
+		baseURL:        baseURL,
 	}
 }
 
@@ -71,7 +75,7 @@ func (a *AuthService) CheckAuthStatus(ctx context.Context, secret string) (*mode
 	}
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := a.httpClient.Do(req)
+	resp, err := a.pollHTTPClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}

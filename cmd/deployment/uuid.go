@@ -2,6 +2,7 @@ package deployment
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -33,9 +34,18 @@ func NewUUIDCommand() *cobra.Command {
 
 			force, _ := cmd.Flags().GetBool("force")
 			deploySvc := service.NewDeploymentService(client)
+
+			sp := output.NewSpinner(fmt.Sprintf("Deploying %s...", uuid))
 			result, err := deploySvc.Deploy(ctx, uuid, force)
 			if err != nil {
+				sp.Fail("Deployment failed")
 				return fmt.Errorf("failed to deploy resource: %w", err)
+			}
+
+			if len(result.Deployments) == 0 {
+				sp.Warning("Deployed (no deployment UUID returned)")
+			} else {
+				sp.Success(fmt.Sprintf("Deployed: %s", result.Deployments[0].DeploymentUUID))
 			}
 
 			format, _ := cmd.Flags().GetString("format")
@@ -59,6 +69,17 @@ func NewUUIDCommand() *cobra.Command {
 			} else {
 				if err := formatter.Format(result); err != nil {
 					return err
+				}
+			}
+
+			// Show application URL if available (FQDN is *string)
+			styler := output.DefaultStyler()
+			appSvc := service.NewApplicationService(client)
+			app, appErr := appSvc.Get(ctx, uuid)
+			if appErr == nil && app.FQDN != nil && *app.FQDN != "" {
+				styler.Info("Application URL:")
+				for _, fqdn := range strings.Split(*app.FQDN, ",") {
+					styler.URL("  " + strings.TrimSpace(fqdn))
 				}
 			}
 

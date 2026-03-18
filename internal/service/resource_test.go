@@ -14,6 +14,36 @@ import (
 	"github.com/saturn-platform/saturn-cli/internal/models"
 )
 
+func TestResourceService_List_Empty(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode([]models.Resource{})
+	}))
+	defer server.Close()
+
+	client := api.NewClient(server.URL, "test-token")
+	svc := NewResourceService(client)
+
+	result, err := svc.List(context.Background())
+	require.NoError(t, err)
+	assert.Empty(t, result)
+}
+
+func TestResourceService_List_Error(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, `{"message":"internal error"}`, http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	client := api.NewClient(server.URL, "test-token")
+	svc := NewResourceService(client)
+
+	result, err := svc.List(context.Background())
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "failed to list resources")
+}
+
 func TestResourceService_List(t *testing.T) {
 	resources := []models.Resource{
 		{
