@@ -34,10 +34,10 @@ func TestServerAddCommand_Args(t *testing.T) {
 	require.NotNil(t, cmd.Args)
 
 	err := cmd.Args(cmd, []string{})
-	assert.Error(t, err, "should require 3 arguments")
+	require.Error(t, err, "should require 3 arguments")
 
 	err = cmd.Args(cmd, []string{"name", "1.2.3.4"})
-	assert.Error(t, err, "should require 3 arguments")
+	require.Error(t, err, "should require 3 arguments")
 
 	err = cmd.Args(cmd, []string{"name", "1.2.3.4", "key-uuid"})
 	assert.NoError(t, err, "should accept exactly 3 arguments")
@@ -55,7 +55,7 @@ func TestServerRemoveCommand_Args(t *testing.T) {
 	require.NotNil(t, cmd.Args)
 
 	err := cmd.Args(cmd, []string{})
-	assert.Error(t, err, "should require UUID argument")
+	require.Error(t, err, "should require UUID argument")
 
 	err = cmd.Args(cmd, []string{"some-uuid"})
 	assert.NoError(t, err, "should accept single UUID")
@@ -66,7 +66,7 @@ func TestServerValidateCommand_Args(t *testing.T) {
 	require.NotNil(t, cmd.Args)
 
 	err := cmd.Args(cmd, []string{})
-	assert.Error(t, err, "should require UUID argument")
+	require.Error(t, err, "should require UUID argument")
 
 	err = cmd.Args(cmd, []string{"some-uuid"})
 	assert.NoError(t, err, "should accept single UUID")

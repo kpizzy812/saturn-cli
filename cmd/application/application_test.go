@@ -51,11 +51,11 @@ func TestNewStartCommand_Args(t *testing.T) {
 	cmd := NewStartCommand()
 
 	t.Run("rejects zero arguments", func(t *testing.T) {
-		assert.Error(t, cmd.Args(cmd, []string{}))
+		require.Error(t, cmd.Args(cmd, []string{}))
 	})
 
 	t.Run("rejects two arguments", func(t *testing.T) {
-		assert.Error(t, cmd.Args(cmd, []string{"uuid-1", "uuid-2"}))
+		require.Error(t, cmd.Args(cmd, []string{"uuid-1", "uuid-2"}))
 	})
 
 	t.Run("accepts exactly one argument", func(t *testing.T) {
@@ -67,11 +67,11 @@ func TestNewStopCommand_Args(t *testing.T) {
 	cmd := NewStopCommand()
 
 	t.Run("rejects zero arguments", func(t *testing.T) {
-		assert.Error(t, cmd.Args(cmd, []string{}))
+		require.Error(t, cmd.Args(cmd, []string{}))
 	})
 
 	t.Run("rejects two arguments", func(t *testing.T) {
-		assert.Error(t, cmd.Args(cmd, []string{"uuid-1", "uuid-2"}))
+		require.Error(t, cmd.Args(cmd, []string{"uuid-1", "uuid-2"}))
 	})
 
 	t.Run("accepts exactly one argument", func(t *testing.T) {
@@ -83,11 +83,11 @@ func TestNewRestartCommand_Args(t *testing.T) {
 	cmd := NewRestartCommand()
 
 	t.Run("rejects zero arguments", func(t *testing.T) {
-		assert.Error(t, cmd.Args(cmd, []string{}))
+		require.Error(t, cmd.Args(cmd, []string{}))
 	})
 
 	t.Run("rejects two arguments", func(t *testing.T) {
-		assert.Error(t, cmd.Args(cmd, []string{"uuid-1", "uuid-2"}))
+		require.Error(t, cmd.Args(cmd, []string{"uuid-1", "uuid-2"}))
 	})
 
 	t.Run("accepts exactly one argument", func(t *testing.T) {

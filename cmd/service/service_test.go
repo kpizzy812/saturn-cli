@@ -47,7 +47,7 @@ func TestServiceStartCommand_Args(t *testing.T) {
 	require.NotNil(t, cmd.Args)
 
 	err := cmd.Args(cmd, []string{})
-	assert.Error(t, err, "should require UUID argument")
+	require.Error(t, err, "should require UUID argument")
 
 	err = cmd.Args(cmd, []string{"some-uuid"})
 	assert.NoError(t, err, "should accept single UUID")
@@ -58,7 +58,7 @@ func TestServiceStopCommand_Args(t *testing.T) {
 	require.NotNil(t, cmd.Args)
 
 	err := cmd.Args(cmd, []string{})
-	assert.Error(t, err, "should require UUID argument")
+	require.Error(t, err, "should require UUID argument")
 
 	err = cmd.Args(cmd, []string{"some-uuid"})
 	assert.NoError(t, err, "should accept single UUID")
@@ -69,7 +69,7 @@ func TestServiceRestartCommand_Args(t *testing.T) {
 	require.NotNil(t, cmd.Args)
 
 	err := cmd.Args(cmd, []string{})
-	assert.Error(t, err, "should require UUID argument")
+	require.Error(t, err, "should require UUID argument")
 
 	err = cmd.Args(cmd, []string{"some-uuid"})
 	assert.NoError(t, err, "should accept single UUID")
@@ -83,7 +83,7 @@ func TestServiceCreateCommand_ValidatesType(t *testing.T) {
 	// Should reject unknown service type
 	cmd.SetArgs([]string{"not-a-real-service"})
 	err := cmd.Execute()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid service type")
 }
 
@@ -95,7 +95,7 @@ func TestServiceCreateCommand_RequiresArgs(t *testing.T) {
 	// No args and no --list-types: should error
 	cmd.SetArgs([]string{})
 	err := cmd.Execute()
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 func TestColorizeServiceStatus(t *testing.T) {

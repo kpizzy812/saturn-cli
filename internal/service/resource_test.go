@@ -39,7 +39,7 @@ func TestResourceService_List_Error(t *testing.T) {
 	svc := NewResourceService(client)
 
 	result, err := svc.List(context.Background())
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, result)
 	assert.Contains(t, err.Error(), "failed to list resources")
 }

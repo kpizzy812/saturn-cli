@@ -31,15 +31,15 @@ func TestNewAddCommand_Args(t *testing.T) {
 	cmd := NewAddCommand()
 
 	t.Run("rejects zero arguments", func(t *testing.T) {
-		assert.Error(t, cmd.Args(cmd, []string{}))
+		require.Error(t, cmd.Args(cmd, []string{}))
 	})
 
 	t.Run("rejects one argument", func(t *testing.T) {
-		assert.Error(t, cmd.Args(cmd, []string{"myserver"}))
+		require.Error(t, cmd.Args(cmd, []string{"myserver"}))
 	})
 
 	t.Run("rejects two arguments", func(t *testing.T) {
-		assert.Error(t, cmd.Args(cmd, []string{"myserver", "https://example.com"}))
+		require.Error(t, cmd.Args(cmd, []string{"myserver", "https://example.com"}))
 	})
 
 	t.Run("accepts exactly three arguments", func(t *testing.T) {
@@ -47,7 +47,7 @@ func TestNewAddCommand_Args(t *testing.T) {
 	})
 
 	t.Run("rejects four arguments", func(t *testing.T) {
-		assert.Error(t, cmd.Args(cmd, []string{"myserver", "https://example.com", "token-123", "extra"}))
+		require.Error(t, cmd.Args(cmd, []string{"myserver", "https://example.com", "token-123", "extra"}))
 	})
 }
 
@@ -71,11 +71,11 @@ func TestNewUseCommand_Args(t *testing.T) {
 	cmd := NewUseCommand()
 
 	t.Run("rejects zero arguments", func(t *testing.T) {
-		assert.Error(t, cmd.Args(cmd, []string{}))
+		require.Error(t, cmd.Args(cmd, []string{}))
 	})
 
 	t.Run("rejects two arguments", func(t *testing.T) {
-		assert.Error(t, cmd.Args(cmd, []string{"ctx-1", "ctx-2"}))
+		require.Error(t, cmd.Args(cmd, []string{"ctx-1", "ctx-2"}))
 	})
 
 	t.Run("accepts exactly one argument", func(t *testing.T) {
@@ -87,11 +87,11 @@ func TestNewRemoveCommand_Args(t *testing.T) {
 	cmd := NewDeleteCommand()
 
 	t.Run("rejects zero arguments", func(t *testing.T) {
-		assert.Error(t, cmd.Args(cmd, []string{}))
+		require.Error(t, cmd.Args(cmd, []string{}))
 	})
 
 	t.Run("rejects two arguments", func(t *testing.T) {
-		assert.Error(t, cmd.Args(cmd, []string{"ctx-1", "ctx-2"}))
+		require.Error(t, cmd.Args(cmd, []string{"ctx-1", "ctx-2"}))
 	})
 
 	t.Run("accepts exactly one argument", func(t *testing.T) {

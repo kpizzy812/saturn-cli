@@ -322,7 +322,7 @@ func TestTableFormatter_UnsupportedType(t *testing.T) {
 	f := NewTableFormatter(Options{Writer: &buf})
 
 	err := f.Format("plain string")
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unsupported data type")
 }
 
