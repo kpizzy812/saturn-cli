@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProjectCommand_Metadata(t *testing.T) {
@@ -38,7 +39,7 @@ func TestProjectCreateCommand_RequiresName(t *testing.T) {
 
 	cmd.SetArgs([]string{})
 	err := cmd.Execute()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "--name is required")
 }
 
@@ -47,7 +48,7 @@ func TestProjectGetCommand_Args(t *testing.T) {
 	assert.NotNil(t, cmd.Args)
 
 	err := cmd.Args(cmd, []string{})
-	assert.Error(t, err, "should require UUID argument")
+	require.Error(t, err, "should require UUID argument")
 
 	err = cmd.Args(cmd, []string{"some-uuid"})
 	assert.NoError(t, err, "should accept single UUID")

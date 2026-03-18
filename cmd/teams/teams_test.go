@@ -31,7 +31,7 @@ func TestTeamGetCommand_Args(t *testing.T) {
 	require.NotNil(t, cmd.Args)
 
 	err := cmd.Args(cmd, []string{})
-	assert.Error(t, err, "should require team ID argument")
+	require.Error(t, err, "should require team ID argument")
 
 	err = cmd.Args(cmd, []string{"42"})
 	assert.NoError(t, err, "should accept single ID")
